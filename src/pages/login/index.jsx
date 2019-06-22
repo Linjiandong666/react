@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Form, Icon, Input, Button,message } from 'antd';
-import axios from 'axios';
+import {reqLogin} from '../../api';
 import logo from './logo.png';
 import './index.less';
 
@@ -12,25 +12,18 @@ const Item = Form.Item;
    login= (e) =>{
     e.preventDefault();
 
-    this.props.form.validateFields((error,values)=>{
+    this.props.form.validateFields(async (error,values)=>{
 
       if(!error){
         //校验通过
         const {username,password}=values;
-        axios.post('/login',{username,password})
-          .then((res)=>{
-            const {data}=res;
-            if(data.status===0){
-              this.props.history.replace('/');
-            } else {
-              message.error(data.msg,3);
-              this.props.form.resetFields(['password']);
-            }
-          })
-          .catch((err)=>{
-            message.error('网络出现异常，请刷新重试~', 3);
-            this.props.form.resetFields(['password']);
-          })
+        const result=await reqLogin(username,password);
+
+        if(result){
+          this.props.history.replace('/');
+        } else {
+          this.props.form.resetFields(['password']);
+        }
       } else {
         //校验失败
         console.log('登录表单校验失败：', error);
