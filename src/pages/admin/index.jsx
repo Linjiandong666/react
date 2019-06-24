@@ -3,6 +3,8 @@ import { Layout } from 'antd';
 
 import LeftNav from '../../components/left-nav';
 import HeaderMain from '../../components/header-main';
+import {getItem} from "../../utils/storage-tools";
+import {reqValidateUserInfo} from '../../api/index';
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -15,6 +17,19 @@ export default class Admin extends Component {
     console.log(collapsed);
     this.setState({ collapsed });
   };
+
+ async componentWillMount() {
+
+    const user=getItem();
+
+    if (user && user._id ) {
+      const result = await reqValidateUserInfo(user._id);
+      if (result) return;
+    }
+
+   this.props.history.replace('/login');
+  }
+
 
   render() {
     const { collapsed } = this.state;

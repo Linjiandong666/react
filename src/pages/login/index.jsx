@@ -1,18 +1,19 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { Form, Icon, Input, Button } from 'antd';
 import {reqLogin} from '../../api';
 import logo from '../../assets/images/logo.png';
 import './index.less';
+import {setItem} from "../../utils/storage-tools";
 
 
 const Item = Form.Item;
 
- class Login extends Component {
+ function Login (props) {
 
-   login= (e) =>{
+   const login= (e) =>{
     e.preventDefault();
 
-    this.props.form.validateFields(async (error,values)=>{
+    props.form.validateFields(async (error,values)=>{
 
       if(!error){
         //校验通过
@@ -20,9 +21,13 @@ const Item = Form.Item;
         const result=await reqLogin(username,password);
 
         if(result){
-          this.props.history.replace('/');
+
+          setItem(result);
+
+          props.history.replace('/');
+
         } else {
-          this.props.form.resetFields(['password']);
+          props.form.resetFields(['password']);
         }
       } else {
         //校验失败
@@ -31,7 +36,7 @@ const Item = Form.Item;
     })
   };
 
-   validator=(rule,value,callback)=> {
+   const validator=(rule,value,callback)=> {
      // console.log(rule,value);
      const name=rule.fullField==='username'?'用户名':'密码';
 
@@ -48,10 +53,7 @@ const Item = Form.Item;
      }
    };
 
-
-
-  render() {
-    const { getFieldDecorator } = this.props.form;
+    const { getFieldDecorator } = props.form;
     return <div className="login">
       <header className="login-header">
         <img src={logo} alt="logo"/>
@@ -59,7 +61,7 @@ const Item = Form.Item;
       </header>
       <section className="login-content">
         <h2>用户登录</h2>
-        <Form onSubmit={this.login} className="login-form">
+        <Form onSubmit={login} className="login-form">
           <Item>
             {
               getFieldDecorator(
@@ -71,7 +73,7 @@ const Item = Form.Item;
                   //   {max:15,message:'用户名必须小于15位'},
                   //   {pattern:/^[a-zA-Z_0-9]+$/,message:'用户名只能包含英文字母、数字和下划线'}
                     {
-                      validator:this.validator
+                      validator:validator
                     }
                   ]
                 }
@@ -88,7 +90,7 @@ const Item = Form.Item;
                 {
                   rules:[
                     {
-                      validator:this.validator
+                      validator:validator
                     }
                   ]
                 }
@@ -104,7 +106,6 @@ const Item = Form.Item;
         </Form>
       </section>
     </div>;
-  }
 }
 
 //得到Form属性
