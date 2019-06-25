@@ -11,10 +11,10 @@ export const reqValidateUserInfo = (id) => ajax('/validate/user', {id}, 'POST');
 //请求天气
 //这里让promise不会立即执行
 export const reqWeather = function () {
-  //包一层promise（拿到异步请求的返回值weatherImg: dayPictureUrl,
-  //         weather）
-  return new Promise((resolve)=>{
-  jsonp(`http://api.map.baidu.com/telematics/v3/weather?location=深圳&output=json&ak=3p49MVra6urFRGOT9s8UBWr2`,{},function (err,data) {
+  let cancel=null;
+                //包一层promise（拿到异步请求的返回值weatherImg: dayPictureUrl, weather）
+  const promise=new Promise((resolve)=>{
+  cancel=jsonp(`http://api.map.baidu.com/telematics/v3/weather?location=深圳&output=json&ak=3p49MVra6urFRGOT9s8UBWr2`,{},function (err,data) {
     if (!err){
       const {dayPictureUrl, weather}=data.results[0].weather_data[0];
       resolve({
@@ -26,7 +26,18 @@ export const reqWeather = function () {
       resolve();
     }
   })
-  })
+  });
+
+  return{
+    promise,
+    //取消ajax请求的方法
+    cancel
+  };
 };
 
+
+
+//动态请求商品数据
 export const reqCategories = (parentId) => ajax('/manage/category/list', {parentId});
+
+export const reqAddCategory = (parentId, categoryName) => ajax('/manage/category/add', {parentId, categoryName}, 'POST');

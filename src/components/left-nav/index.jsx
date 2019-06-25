@@ -25,9 +25,11 @@ class LeftNav extends Component {
 
   componentWillMount() {
     const { pathname } = this.props.location;
+    //定义一个标识
+    let isHome=true;
+
     this.menus = menuList.map((menu) => {
       const children = menu.children;
-
       if (children) {
         return <SubMenu
           key={menu.key}
@@ -41,17 +43,22 @@ class LeftNav extends Component {
           {
             children.map((item) => {
               if (item.key === pathname) {
+                //匹配上了标签就为false
                 this.openKey = menu.key;
+                isHome=false;
               }
               return this.createMenu(item);
             })
           }
         </SubMenu>;
       } else {
-        return this.createMenu(menu);
+          //匹配上了标签就为false
+          if (menu.key===pathname) isHome=false;
+          return this.createMenu(menu);
       }
     });
-    this.selectedKey = pathname;
+    //根据标签的ture或false来默认选中菜单
+    this.selectedKey = isHome?'/home':pathname;
   }
 
   render() {

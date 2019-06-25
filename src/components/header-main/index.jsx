@@ -20,19 +20,29 @@ class HeaderMain extends Component {
 
  async componentDidMount() {
    //更新时间
-    setInterval(()=>{
+   this.timeId=setInterval(()=>{
       this.setState({
         sysTime:Date.now()
       })
     },1000);
 
+    //接收取消请求方法和更新天气方法
+    const {promise,cancel}=reqWeather();
+    this.cancel=cancel;
     //更新天气
-    const result=await reqWeather();
+    const result=await promise;
     if(result){
       this.setState(result);
     }
   }
 
+  //清除内存泄漏，防止卸载了组件还有报错
+  componentWillUnmount() {
+   //清除定时器
+    clearInterval(this.timeId);
+    //清除ajax天气请求
+    this.cancel();
+  }
 
   componentWillMount() {
     //得到用户名展示(一次即可)
