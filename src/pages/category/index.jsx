@@ -1,20 +1,25 @@
 import React, { Component } from 'react';
 import {Card, Button, Icon, Table, Modal, message} from 'antd';
 
-import { reqCategories } from '../../api';
+import { reqCategories,reqAddCategory,reqUpdateCategoryName } from '../../api';
 import MyButton from '../../components/my-button';
 import './index.less';
 import AddCategoryForm from './add-category-form';
-import {reqAddCategory} from '../../api/index';
+import UpdateCategoryNameForm from './update-category-name';
 
 
 
 
 export default class Category extends Component {
+  //初始化状态
   state = {
     categories: [], // 一级分类列表
-    isShowAddCategory:false
+    isShowAddCategory:false,
+    isShowUpdateCategoryName: false,
   };
+  //没有点击修改名称时是没有值的，为了防止出现传递时报错，所以初始化为一个空对象（这样不报错，值为undefined）
+  category={};
+
 
   async componentDidMount() {
     const result = await reqCategories('0');
@@ -23,18 +28,17 @@ export default class Category extends Component {
     }
   }
 
-  showAddCategory=()=>{
-  this.setState({
-    isShowAddCategory:true
-  })
+
+  //切换弹话框的显示（封装一个公共弹框函数，方便复用）
+  toggleDisplay=(stateName,stateValue)=>{
+    return ()=>{
+      this.setState({
+        [stateName]:stateValue
+      })
+    }
   };
 
-  hideAddCategory=()=>{
-    this.setState({
-      isShowAddCategory:false
-    })
-  };
-
+  //添加品类函数
   addCategory = () => {
     // 1. 表单校验
     // 2. 收集表单数据
@@ -72,9 +76,66 @@ export default class Category extends Component {
 
   };
 
+  //保存数据，且更新状态，可以打开弹话框
+  saveCategory=(category)=>{
+    return ()=>{
+      this.category=category;
+      this.setState({
+        isShowUpdateCategoryName: true
+      })
+    }
+};
+
+  //在修改名称的对话框中，点击取消时，清空输入框的值且关闭对话框
+  hideUpdateCategoryName=()=>{
+    this.updateCategoryNameForm.props.form.resetFields(['categoryName']);
+
+    this.setState({
+      isShowUpdateCategoryName: false
+    })
+  };
+
+//在修改名称的对话框中，点击确定时，校验表单，收集数据，发送请求，清空输入框的值且关闭对话框
+  updateCategoryName=()=>{
+    //结构赋值，提升性能
+    const {form}=this.updateCategoryNameForm.props;
+
+    form.validateFields(async (err,values)=>{
+      if (!err){
+        const {categoryName}=values;
+        const categoryId=this.category._id;
+        const result=await reqUpdateCategoryName(categoryId,categoryName);
+
+        if (result){
+          //在不修改原数据的情况下，将修改后的名字显示到表格上
+          const categories=this.state.categories.map((category)=>{
+            let {_id,name,parentId}=category;
+            if (_id===categoryId){
+              name=categoryName;
+              return{
+                _id,
+                name,
+                parentId
+              }
+            }
+            return category
+          });
+
+          form.resetFields(['categoryName']);
+          message.success('更新名称成功~', 1);
+          this.setState({
+            isShowUpdateCategoryName: false,
+            categories
+          })
+        }
+      }
+    });
+  };
+
+
   render() {
 
-    const {isShowAddCategory,categories} =this.state;
+    const {isShowAddCategory,categories,isShowUpdateCategoryName} =this.state;
     // 决定表头内容
     const columns = [
       {
@@ -83,12 +144,12 @@ export default class Category extends Component {
       },
       {
         title: '操作',
-        dataIndex: 'operation',
+        // dataIndex: 'operation',
         className: 'category-operation',
         // 改变当列的显示
-        render: text => {
+        render: category => {
           return <div>
-            <MyButton>修改名称</MyButton>
+            <MyButton onClick={this.saveCategory(category)}>修改名称</MyButton>
             <MyButton>查看其子品类</MyButton>
           </div>
         },
@@ -120,7 +181,7 @@ export default class Category extends Component {
     ];*/
 
 
-    return <Card title="一级分类列表" extra={<Button type="primary" onClick={this.showAddCategory}><Icon type="plus" />添加品类</Button>}>
+    return <Card title="一级分类列表" extra={<Button type="primary" onClick={this.toggleDisplay('isShowAddCategory',true)}><Icon type="plus" />添加品类</Button>}>
       <Table
         columns={columns}
         dataSource={categories}
@@ -138,11 +199,23 @@ export default class Category extends Component {
         title="添加分类"
         visible={isShowAddCategory}
         onOk={this. addCategory}
-        onCancel={this.hideAddCategory}
+        onCancel={this.toggleDisplay('isShowAddCategory',false)}
         okText="确认"
         cancelText="取消"
       >
         <AddCategoryForm   categories={categories} wrappedComponentRef={(form) => this.addCategoryForm = form}/>
+      </Modal>
+
+      <Modal
+        title="更新分类"
+        visible={isShowUpdateCategoryName}
+        onOk={this.updateCategoryName}
+        onCancel={this.hideUpdateCategoryName}
+        okText="确认"
+        cancelText="取消"
+        width={300}
+      >
+        <UpdateCategoryNameForm categoryName={this.category.name}  wrappedComponentRef={(form) => this.updateCategoryNameForm = form}/>
       </Modal>
 
     </Card>;

@@ -18,7 +18,7 @@ export default function ajax(url,data={},method='get'){
     .then((res)=>{
       const {data}=res;
       if(data.status===0){
-        return data.data;
+        return data.data || {};
       } else {
         message.error(data.msg,3);
       }

@@ -41,3 +41,6 @@ export const reqWeather = function () {
 export const reqCategories = (parentId) => ajax('/manage/category/list', {parentId});
 
 export const reqAddCategory = (parentId, categoryName) => ajax('/manage/category/add', {parentId, categoryName}, 'POST');
+
+//暴露修改名称时的请求方法
+export const reqUpdateCategoryName = (categoryId, categoryName) => ajax('/manage/category/update', {categoryId, categoryName}, 'POST');
